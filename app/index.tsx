@@ -1,6 +1,6 @@
 import { Config } from "@/constants/Config";
 import { useCallback, useEffect, useRef } from "react";
-import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
+import { BackHandler, Linking, SafeAreaView, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 export const getGeoLocationJS = () => {
@@ -85,6 +85,9 @@ export default function Index() {
         onHttpError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
           console.warn("WebView HTTP error: ", nativeEvent);
+        }}
+        onOpenWindow={(event) => {
+          Linking.openURL(event.nativeEvent.targetUrl);
         }}
       />
     </SafeAreaView>
