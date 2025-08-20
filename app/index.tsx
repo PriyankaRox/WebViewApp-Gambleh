@@ -1,5 +1,6 @@
-import { useRef } from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { Config } from "@/constants/Config";
+import { useCallback, useEffect, useRef } from "react";
+import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 export const getGeoLocationJS = () => {
@@ -35,9 +36,25 @@ export default function Index() {
   const webViewRef = useRef<WebView>(null);
 
   // User agent that mimics a desktop browser to bypass Google's WebView restrictions
-  const customUserAgent =
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+  const customUserAgent = Config.USER_AGENT;
 
+    const handleBackPress = useCallback(() => {
+      if (webViewRef.current) {
+        webViewRef.current.goBack();
+        return true; 
+      }
+      return false;
+    }, []);
+  
+    useEffect(() => {
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        handleBackPress
+      );
+      return () => {
+        backHandler.remove();
+      };
+    }, [handleBackPress]);
   return (
     <SafeAreaView style={styles.container}>
       <WebView
@@ -46,7 +63,7 @@ export default function Index() {
         mixedContentMode="always"
         allowsFullscreenVideo={true}
         ref={webViewRef}
-        source={{ uri: "https://gambleh.com/" }}
+        source={{ uri: Config.API_BASE_URL }}
         geolocationEnabled={true}
         allowsBackForwardNavigationGestures={true}
         injectedJavaScript={getGeoLocationJS()}
