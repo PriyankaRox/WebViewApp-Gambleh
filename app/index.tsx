@@ -34,8 +34,6 @@ export const getGeoLocationJS = () => {
 
 export default function Index() {
   const webViewRef = useRef<WebView>(null);
-
-
   // User agent that mimics a desktop browser to bypass Google's WebView restrictions
   const customUserAgent = Config.USER_AGENT;
 
@@ -88,10 +86,10 @@ const styles = StyleSheet.create({
   },
   webview: {
     position: "absolute",
-    top: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    top: 0,
     left: 0,
     right: 0,
-    bottom: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 0,
+    bottom: 0,
     backgroundColor: "black"
   },
   buttonContainer: {
