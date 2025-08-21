@@ -1,6 +1,6 @@
-import { useRef } from "react";
-import { SafeAreaView, StyleSheet, Platform, StatusBar } from "react-native";
 import { Config } from "@/constants/Config";
+import { useCallback, useEffect, useRef } from "react";
+import { BackHandler, Linking, SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 export const getGeoLocationJS = () => {
@@ -37,6 +37,23 @@ export default function Index() {
   // User agent that mimics a desktop browser to bypass Google's WebView restrictions
   const customUserAgent = Config.USER_AGENT;
 
+    const handleBackPress = useCallback(() => {
+      if (webViewRef.current) {
+        webViewRef.current.goBack();
+        return true; 
+      }
+      return false;
+    }, []);
+  
+    useEffect(() => {
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        handleBackPress
+      );
+      return () => {
+        backHandler.remove();
+      };
+    }, [handleBackPress]);
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -73,6 +90,9 @@ export default function Index() {
         onHttpError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
           console.warn("WebView HTTP error: ", nativeEvent);
+        }}
+        onOpenWindow={(event) => {
+          Linking.openURL(event.nativeEvent.targetUrl);
         }}
       />
     </SafeAreaView>
