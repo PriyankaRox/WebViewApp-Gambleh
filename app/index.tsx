@@ -1,35 +1,57 @@
+import * as Location from 'expo-location';
 import { useRef } from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { PermissionsAndroid, Platform, SafeAreaView, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
+
 export const getGeoLocationJS = () => {
-  const getCurrentPosition = `
+  return `
+    (function() {
+      const originalGetCurrentPosition = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
       navigator.geolocation.getCurrentPosition = (success, error, options) => {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ event: 'getCurrentPosition', options: options }));
-  
-        window.addEventListener('message', (e) => {
-          let eventData = {}
+        const message = JSON.stringify({ event: 'getCurrentPosition', options: options });
+        window.ReactNativeWebView.postMessage(message);
+        
+        const listener = (event) => {
+          let eventData;
           try {
-            eventData = JSON.parse(e.data);
-          } catch (e) {}
-  
+            eventData = JSON.parse(event.data);
+          } catch (e) {
+            return;
+          }
+
           if (eventData.event === 'currentPosition') {
             success(eventData.data);
+            window.removeEventListener('message', listener);
           } else if (eventData.event === 'currentPositionError') {
             error(eventData.data);
+            window.removeEventListener('message', listener);
           }
-        });
-      };
-      true;
-    `;
+        };
 
-  return `
-      (function() {
-        ${getCurrentPosition}
-    
-      })();
-    `;
+        window.addEventListener('message', listener);
+      };
+    })();
+    true;
+  `;
 };
+
+async function requestLocationPermission() {
+  if (Platform.OS === 'android') {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  }
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  return status === 'granted';
+}
+
 
 export default function Index() {
   const webViewRef = useRef<WebView>(null);
@@ -38,6 +60,60 @@ export default function Index() {
   const customUserAgent =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+    const handleWebViewMessage = async (event: any) => {
+      let eventData;
+      try {
+        eventData = JSON.parse(event.nativeEvent.data);
+      } catch (e) {
+        return;
+      }
+  
+      if (eventData.event === 'getCurrentPosition') {
+        const hasPermission = await requestLocationPermission();
+        if (hasPermission) {
+          try {
+            const location = await Location.getCurrentPositionAsync({});
+            const position = {
+              coords: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                accuracy: location.coords.accuracy,
+                altitude: location.coords.altitude,
+                heading: location.coords.heading,
+                speed: location.coords.speed
+              },
+              timestamp: location.timestamp
+            };
+            webViewRef.current?.injectJavaScript(`
+              window.postMessage(JSON.stringify({
+                event: 'currentPosition',
+                data: ${JSON.stringify(position)}
+              }), '*');
+            `);
+          } catch (error) {
+            webViewRef.current?.injectJavaScript(`
+              window.postMessage(JSON.stringify({
+                event: 'currentPositionError',
+                data: {
+                  code: 2,
+                  message: 'Position acquisition failed.'
+                }
+              }), '*');
+            `);
+          }
+        } else {
+          webViewRef.current?.injectJavaScript(`
+            window.postMessage(JSON.stringify({
+              event: 'currentPositionError',
+              data: {
+                code: 1,
+                message: 'Permission denied.'
+              }
+            }), '*');
+          `);
+        }
+      }
+    };
   return (
     <SafeAreaView style={styles.container}>
       <WebView
@@ -57,6 +133,7 @@ export default function Index() {
         scalesPageToFit={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
+        onMessage={handleWebViewMessage}
         onShouldStartLoadWithRequest={(request) => {
           // Allow all navigation including Google sign-in within WebView
           return true;
