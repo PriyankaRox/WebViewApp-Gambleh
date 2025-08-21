@@ -1,6 +1,6 @@
 import { Config } from "@/constants/Config";
 import { useCallback, useEffect, useRef } from "react";
-import { BackHandler, Linking, SafeAreaView, StyleSheet } from "react-native";
+import { BackHandler, Linking, SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 
 export const getGeoLocationJS = () => {
@@ -34,7 +34,6 @@ export const getGeoLocationJS = () => {
 
 export default function Index() {
   const webViewRef = useRef<WebView>(null);
-
   // User agent that mimics a desktop browser to bypass Google's WebView restrictions
   const customUserAgent = Config.USER_AGENT;
 
@@ -57,7 +56,13 @@ export default function Index() {
     }, [handleBackPress]);
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000000"
+        translucent={false}
+      />
       <WebView
+        style={styles.webview}
         allowsLinkPreview={true}
         originWhitelist={["*"]}
         mixedContentMode="always"
@@ -97,13 +102,14 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
+    backgroundColor: "black"
+  },
+  webview: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 9999,
     backgroundColor: "black"
   },
   buttonContainer: {
