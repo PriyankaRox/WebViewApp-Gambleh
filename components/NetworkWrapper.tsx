@@ -7,6 +7,7 @@ const { width, height } = Dimensions.get('window');
 
 const NetworkWrapper = ({ children }: { children: React.ReactNode }) => {
     const [isConnected, setIsConnected] = useState(true);
+    const [isRetrying, setIsRetrying] = useState(false);
     const pulseAnim = useState(new Animated.Value(0))[0];
     const floatAnim1 = useState(new Animated.Value(0))[0];
     const floatAnim2 = useState(new Animated.Value(0))[0];
@@ -90,6 +91,21 @@ const NetworkWrapper = ({ children }: { children: React.ReactNode }) => {
         }
     }, [isConnected, pulseAnim, floatAnim1, floatAnim2, floatAnim3, fadeAnim]);
 
+    const handleRetry = async () => {
+        setIsRetrying(true);
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const networkState = await NetInfo.fetch();
+            setIsConnected(networkState.isConnected ?? false);
+        } catch (error) {
+            console.warn('Retry failed:', error);
+        } finally {
+            setIsRetrying(false);
+        }
+    };
+
     if (!isConnected) {
         const pulseScale = pulseAnim.interpolate({
             inputRange: [0, 1],
@@ -172,8 +188,15 @@ const NetworkWrapper = ({ children }: { children: React.ReactNode }) => {
                             Check your connection and try again.
                         </Text>
 
-                        <TouchableOpacity style={styles.retryButton} activeOpacity={0.8}>
-                            <Text style={styles.retryButtonText}>Try Again</Text>
+                        <TouchableOpacity
+                            style={[styles.retryButton, isRetrying && styles.retryButtonDisabled]}
+                            activeOpacity={0.8}
+                            onPress={handleRetry}
+                            disabled={isRetrying}
+                        >
+                            <Text style={styles.retryButtonText}>
+                                {isRetrying ? 'Checking...' : 'Try Again'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
@@ -299,6 +322,10 @@ const styles = StyleSheet.create({
         fontSize: Math.min(width * 0.048, 18),
         fontWeight: '600',
         textAlign: 'center',
+    },
+    retryButtonDisabled: {
+        backgroundColor: '#6B7280',
+        opacity: 0.7,
     },
 });
 
