@@ -163,7 +163,13 @@ export default function Index() {
         mediaPlaybackRequiresUserAction={false}
         onMessage={handleWebViewMessage}
         onShouldStartLoadWithRequest={(request) => {
-          // Allow all navigation including Google sign-in within WebView
+          const { url } = request;
+          // Hum check Krr rhe hai if mailto: or tel: links then open them externally
+          if (url.startsWith('mailto:') || url.startsWith('tel:')) {
+            Linking.openURL(url).catch(err => console.error('An error occurred', err));
+            return false; // Tells the WebView NOT to load the URL
+          }
+          // For all other URLs, we allow all navigation including Google sign-in within WebView
           return true;
         }}
         onError={(syntheticEvent) => {
