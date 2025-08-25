@@ -11,6 +11,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import NetworkWrapper from "@/components/NetworkWrapper";
 
 export const getGeoLocationJS = () => {
   return `
@@ -143,47 +144,49 @@ export default function Index() {
         backgroundColor="#000000"
         translucent={false}
       />
-      <WebView
-        style={styles.webview}
-        allowsLinkPreview={true}
-        originWhitelist={["*"]}
-        mixedContentMode="always"
-        allowsFullscreenVideo={true}
-        ref={webViewRef}
-        source={{ uri: Config.API_BASE_URL }}
-        geolocationEnabled={true}
-        allowsBackForwardNavigationGestures={true}
-        injectedJavaScript={getGeoLocationJS()}
-        javaScriptEnabled={true}
-        userAgent={customUserAgent}
-        domStorageEnabled={true}
-        startInLoadingState={true}
-        scalesPageToFit={true}
-        allowsInlineMediaPlayback={true}
-        mediaPlaybackRequiresUserAction={false}
-        onMessage={handleWebViewMessage}
-        onShouldStartLoadWithRequest={(request) => {
-          const { url } = request;
-          // Hum check Krr rhe hai if mailto: or tel: links then open them externally
-          if (url.startsWith('mailto:') || url.startsWith('tel:')) {
-            Linking.openURL(url).catch(err => console.error('An error occurred', err));
-            return false; // Tells the WebView NOT to load the URL
-          }
-          // For all other URLs, we allow all navigation including Google sign-in within WebView
-          return true;
-        }}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.warn("WebView error: ", nativeEvent);
-        }}
-        onHttpError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.warn("WebView HTTP error: ", nativeEvent);
-        }}
-        onOpenWindow={(event) => {
-          Linking.openURL(event.nativeEvent.targetUrl);
-        }}
-      />
+      <NetworkWrapper>
+        <WebView
+          style={styles.webview}
+          allowsLinkPreview={true}
+          originWhitelist={["*"]}
+          mixedContentMode="always"
+          allowsFullscreenVideo={true}
+          ref={webViewRef}
+          source={{ uri: Config.API_BASE_URL }}
+          geolocationEnabled={true}
+          allowsBackForwardNavigationGestures={true}
+          injectedJavaScript={getGeoLocationJS()}
+          javaScriptEnabled={true}
+          userAgent={customUserAgent}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+          scalesPageToFit={true}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+          onMessage={handleWebViewMessage}
+          onShouldStartLoadWithRequest={(request) => {
+            const { url } = request;
+            // Hum check Krr rhe hai if mailto: or tel: links then open them externally
+            if (url.startsWith('mailto:') || url.startsWith('tel:')) {
+              Linking.openURL(url).catch(err => console.error('An error occurred', err));
+              return false; // Tells the WebView NOT to load the URL
+            }
+            // For all other URLs, we allow all navigation including Google sign-in within WebView
+            return true;
+          }}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.warn("WebView error: ", nativeEvent);
+          }}
+          onHttpError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.warn("WebView HTTP error: ", nativeEvent);
+          }}
+          onOpenWindow={(event) => {
+            Linking.openURL(event.nativeEvent.targetUrl);
+          }}
+        />
+      </NetworkWrapper>
     </SafeAreaView>
   );
 }
