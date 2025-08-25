@@ -1,39 +1,41 @@
 {
   "expo": {
-    "name": "web-view-app",
-    "slug": "web-view-app",
+    "name": "Chanced",
+    "slug": "Chanced",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "webviewapp",
+    "icon": "./assets/images/chanced.png",
+    "scheme": "chancedapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.web-view-app"
+      "bundleIdentifier": "com.chanced.app",
+      "icon": "./assets/images/chanced.png"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
+      "icon": "./assets/images/chanced.png",
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.webviewapp"
+      "package": "com.chanced.app"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/chanced.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
+          "backgroundColor": "#ffffff",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "dark": {
+            "image": "./assets/images/splashicon.png",
+            "backgroundColor": "#000000"
+          }
         }
       ],
       [
